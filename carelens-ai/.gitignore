@@ -1,0 +1,11 @@
+node_modules/
+dist/
+__pycache__/
+backend/instance/
+
+.env
+backend/.env
+node_modules/
+dist/
+instance/
+__pycache__/
