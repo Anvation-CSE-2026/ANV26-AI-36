@@ -2,15 +2,11 @@ services:
   - type: web
     name: carelens-ai
     runtime: python
-    plan: starter
+    plan: free
     rootDir: carelens-ai
     buildCommand: cd frontend && npm ci && npm run build && cd ../backend && pip install -r requirements.txt
     startCommand: cd backend && gunicorn --workers 1 --bind 0.0.0.0:$PORT 'app:create_app()'
     healthCheckPath: /welcome
-    disk:
-      name: carelens-data
-      mountPath: /opt/render/project/src/carelens-ai/backend/instance
-      sizeGB: 10
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.8

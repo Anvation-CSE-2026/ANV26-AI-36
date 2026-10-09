@@ -24,20 +24,21 @@ CareLens AI is a private, family-first health organiser. Keep medical documents,
 4. [Tech stack](#tech-stack)
 5. [Architecture](#architecture)
 6. [Quick start](#quick-start)
-7. [Configuration](#configuration)
-8. [AI assistant setup](#ai-assistant-setup)
-9. [How the assistant stays safe](#how-the-assistant-stays-safe)
-10. [Encryption and key backup](#encryption-and-key-backup)
-11. [Sharing model](#sharing-model)
-12. [API overview](#api-overview)
-13. [Project structure](#project-structure)
-14. [Testing](#testing)
-15. [Upgrading an existing installation](#upgrading-an-existing-installation)
-16. [Known limitations](#known-limitations)
-17. [Roadmap](#roadmap)
-18. [Contributing](#contributing)
-19. [Reporting a vulnerability](#reporting-a-vulnerability)
-20. [License](#license)
+7. [Free demo deployment](#free-demo-deployment-render)
+8. [Configuration](#configuration)
+9. [AI assistant setup](#ai-assistant-setup)
+10. [How the assistant stays safe](#how-the-assistant-stays-safe)
+11. [Encryption and key backup](#encryption-and-key-backup)
+12. [Sharing model](#sharing-model)
+13. [API overview](#api-overview)
+14. [Project structure](#project-structure)
+15. [Testing](#testing)
+16. [Upgrading an existing installation](#upgrading-an-existing-installation)
+17. [Known limitations](#known-limitations)
+18. [Roadmap](#roadmap)
+19. [Contributing](#contributing)
+20. [Reporting a vulnerability](#reporting-a-vulnerability)
+21. [License](#license)
 
 ---
 
@@ -209,6 +210,14 @@ cd ../backend && python app.py     # serves the built app on http://127.0.0.1:50
 ```
 
 > After pulling changes that touch `frontend/src`, rebuild with `npm run build` so the served app includes them (for example the Security panel).
+
+---
+
+## Free demo deployment (Render)
+
+The repository-root `render.yaml` configures a free Render web service. Push the repository to GitHub, then in Render choose **New → Blueprint Instance** and select the repository and branch.
+
+Free services sleep when idle and use ephemeral storage. The local SQLite database, uploaded documents, encryption keys and saved AI settings can be lost on spin-down, restart or redeploy. Use fictional demo data only; this setup is not suitable for real health records or production. Persistent storage requires a paid service with a persistent disk; keep disk-backed encryption keys safe.
 
 ---
 
