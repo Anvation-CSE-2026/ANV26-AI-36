@@ -35,6 +35,9 @@ def _hostname(host):
 
 def allowed_hosts():
     extra = {_hostname(x) for x in os.environ.get("CARELENS_ALLOWED_HOSTS", "").split(",") if x.strip()}
+    render_host = os.environ.get("RENDER_EXTERNAL_HOSTNAME", "").strip()
+    if render_host:
+        extra.add(_hostname(render_host))
     return LOOPBACK_HOSTS | extra
 
 

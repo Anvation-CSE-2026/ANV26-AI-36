@@ -4,3 +4,4 @@ pypdf>=4.0
 Pillow>=10.1
 pytesseract>=0.3.10
 cryptography>=42.0
+gunicorn>=23.0,<24
