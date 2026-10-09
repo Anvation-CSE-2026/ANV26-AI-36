@@ -37,6 +37,10 @@ export default function FloatingAssistant() {
   const docId = docMatch ? Number(docMatch[1]) : null;
   const hasVoice = (code) => !!findVoice(voices, code);
 
+  useEffect(() => {
+    if (VOICE_LANGS.some((l) => l.code === user.preferred_language)) setLang(user.preferred_language);
+  }, [user.preferred_language]);
+
   useEffect(() => { if (open) api.aiStatus().then((s) => setAiOn(!!s.configured)).catch(() => {}); }, [open]);
   useEffect(() => { endRef.current?.scrollIntoView?.({ block: 'end' }); }, [messages, busy, open]);
   useEffect(() => () => { stopSpeaking(); recRef.current?.stop(); }, []);

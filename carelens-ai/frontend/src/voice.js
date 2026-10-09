@@ -71,17 +71,21 @@ export function speak(text, code, voices, { onEnd } = {}) {
   const voice = findVoice(voices, code);
   const parts = splitForSpeech(text);
   if (!parts.length) { onEnd?.(); return !!voice; }
+  if (code !== 'en' && !voice) { onEnd?.(); return false; }
   const finish = () => { if (mine === session) { live = []; onEnd?.(); } };
-  parts.forEach((p, i) => {
-    const u = new SpeechSynthesisUtterance(p);
+  const playPart = (index) => {
+    if (mine !== session) return;
+    if (index >= parts.length) { finish(); return; }
+    const u = new SpeechSynthesisUtterance(parts[index]);
     u.lang = bcpFor(code);
     if (voice) u.voice = voice;
     u.rate = 0.95;
-    u.onend = i === parts.length - 1 ? finish : null;
-    u.onerror = (e) => { if (e.error !== 'interrupted' && e.error !== 'canceled') finish(); };
-    live.push(u);
+    u.onend = () => playPart(index + 1);
+    u.onerror = () => finish();
+    live = [u];
     s.speak(u);
-  });
+  };
+  playPart(0);
   return !!voice;
 }
 

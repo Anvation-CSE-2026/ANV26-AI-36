@@ -31,6 +31,7 @@ _GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta"
 _gemini_ok = {}  # key -> model that last worked
 OPENAI_MODEL = "gpt-4o-mini"
 MAX_CONTEXT_CHARS = 9000
+ANALYSIS_CHUNK_CHARS = 12000
 
 
 class AINotConfigured(Exception):
@@ -502,11 +503,18 @@ def voice_report(db, user, document_id, language, mode):
 
 # ---------- document analysis & diet ----------
 ANALYSIS_INSTRUCTIONS = """Using ONLY the document text in <context>, return a JSON object (no other text, no code fences) with keys:
-"summary": a plain-language summary of what the document says (3-6 sentences),
+"summary": a plain-language summary of the whole document (5-8 concise sentences covering each section and its important results),
 "findings": a list of {"label": ..., "detail": ...} for important items the document explicitly states (values exactly as written),
 "terms": a list of {"term": ..., "meaning": ...} giving general explanations of medical terms that appear in the document,
 "not_stated": a list of short notes about things a reader might want but the document does not state (e.g. the reason for a medicine).
 Do not diagnose or speculate. Write all text values in {language}."""
+
+ANALYSIS_CHUNK_INSTRUCTIONS = """This is one section of a longer health document. Return a JSON object (no other text, no code fences) with keys:
+"summary": a concise summary of the important information in this section,
+"findings": a list of {"label": ..., "detail": ...} for important items explicitly stated here (values exactly as written),
+"terms": a list of {"term": ..., "meaning": ...} explaining medical terms that appear here,
+"not_stated": an empty list.
+Do not diagnose or speculate. Preserve information that may be important when combined with other sections. Write all text values in {language}."""
 
 
 def _parse_json(text):
@@ -523,8 +531,26 @@ def analyze_document(db, doc, language):
     if not ex:
         raise ValueError("no text")
     system = system_prompt(language) + "\n\n" + ANALYSIS_INSTRUCTIONS.replace("{language}", LANGUAGES.get(language, "English"))
-    body = safety.neutralise_context(f"DOCUMENT \"{doc['filename']}\"\n{ex['text'][:12000]}")
-    raw = complete(system, [{"role": "user", "content": f"<context>\n{body}\n</context>"}], 1800)
+    text = ex["text"]
+    if len(text) <= ANALYSIS_CHUNK_CHARS:
+        body = safety.neutralise_context(f"DOCUMENT \"{doc['filename']}\"\n{text}")
+        raw = complete(system, [{"role": "user", "content": f"<context>\n{body}\n</context>"}], 1800)
+    else:
+        chunk_system = system_prompt(language) + "\n\n" + ANALYSIS_CHUNK_INSTRUCTIONS.replace(
+            "{language}", LANGUAGES.get(language, "English"))
+        analyses = []
+        for start in range(0, len(text), ANALYSIS_CHUNK_CHARS):
+            section = text[start:start + ANALYSIS_CHUNK_CHARS]
+            body = safety.neutralise_context(f"DOCUMENT \"{doc['filename']}\" (section {len(analyses) + 1})\n{section}")
+            chunk = complete(chunk_system, [{"role": "user", "content": f"<context>\n{body}\n</context>"}], 900)
+            analyses.append(_parse_json(chunk) or {"summary": chunk, "findings": [], "terms": [], "not_stated": []})
+        combined = "\n\n".join(
+            f"Section {i}: {json.dumps(part, ensure_ascii=False)}" for i, part in enumerate(analyses, 1)
+        )
+        context = safety.neutralise_context(
+            f'DOCUMENT "{doc["filename"]}" — summaries of all {len(analyses)} sections:\n{combined}'
+        )
+        raw = complete(system, [{"role": "user", "content": f"<context>\n{context}\n</context>"}], 1800)
     content = _parse_json(raw) or {"summary": raw, "findings": [], "terms": [], "not_stated": []}
     with db:
         db.execute("""INSERT INTO document_analyses (document_id, language, content, model, created_at) VALUES (?,?,?,?,?)

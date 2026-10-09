@@ -36,6 +36,22 @@ class VoiceTests(Base):
         self.assertIn("Protein that carries oxygen.", r.json["text"])
         self.assertIn("Kannada", self.prompts[-1][0])
 
+    def test_long_document_analysis_includes_all_sections_in_chosen_language(self):
+        first = "START OF FULL REPORT. Hemoglobin 11.2 g/dL.\n"
+        last = "\nEND OF FULL REPORT. Platelet count 250."
+        did = self.upload(self.meena, [first, "Additional report details. " * 700, last])
+        self.fake_ai(json.dumps(ANALYSIS))
+
+        r = self.meena.post("/api/ai/voice/report", json={"mode": "summary", "language": "kn", "document_id": did})
+
+        self.assertEqual(r.status_code, 200, r.json)
+        self.assertEqual(r.json["text"], ANALYSIS["summary"])
+        user_prompts = "\n".join(messages[0]["content"] for _, messages in self.prompts)
+        self.assertIn("START OF FULL REPORT", user_prompts)
+        self.assertIn("END OF FULL REPORT", user_prompts)
+        self.assertGreaterEqual(len(self.prompts), 3)
+        self.assertTrue(all("Kannada" in system for system, _ in self.prompts))
+
     def test_other_members_document_needs_a_grant(self):
         did = self.upload(self.meena)
         self.fake_ai(json.dumps(ANALYSIS))
