@@ -4,6 +4,8 @@
 
 CareLens AI is a private, family-first health organiser. Keep medical documents, medicines, reminders and emergency details in one place, share only what you choose with family members, and ask an AI assistant to explain your own records in plain language, in your own language.
 
+> **Live demo:** [carelens-ai-yke1.onrender.com](https://carelens-ai-yke1.onrender.com) — hosted on Render's free tier; use fictional data only because storage is temporary.
+
 ![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)
 ![Flask](https://img.shields.io/badge/Flask-3-000000?logo=flask)
 ![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)
